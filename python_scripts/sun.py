@@ -1,6 +1,5 @@
 import math
 import datetime
-
 class Sun:
 
     def __init__(self):

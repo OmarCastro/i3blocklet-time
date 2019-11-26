@@ -1,47 +1,52 @@
 import sys
-from datetime import datetime
+import time
+import os
+from geo_location import from_ISO_6709
 
-now = datetime.now()
-currentHourUTC = now.hour
-currentMinuteUTC = now.minute
+now = time.time()
 
-def timeinOffset(utcOffset):
-    gmt_offset_multi = 1 if utcOffset[0] == "+" else -1
-    gmt_offset_hours = int(utcOffset[1:-3])
-    gmt_offset_minutes = int(utcOffset[-2:])
-    gmt_offset_in_minutes = gmt_offset_multi * (gmt_offset_hours * 60 + gmt_offset_minutes);
-    utc_hours = currentHourUTC
-    utc_mins = currentMinuteUTC
-    utc_in_mins = utc_hours * 60 + utc_mins
-    local_time = utc_in_mins + gmt_offset_in_minutes
-    local_time = local_time % (24 * 60) if local_time >= 0 else local_time + 24 * 60
-    local_hours = local_time / 60
-    local_min = local_time % 60
-    return '{0:02d}:{1:02d}'.format(local_hours, local_min)
+def time_in_timezone(timezone_name):
+    os.environ["TZ"]=timezone_name
+    time.tzset()
+    result = time.strftime("%H:%M",time.localtime(now)).split()
+    return result
 
 
 data_format_fromArgs=sys.argv[1].split(",")
 mapdict={
     'name': 0,
-    'offset': 1,
-    'abbreviation': 2,
-    'latitude': 3,
-    'longitude': 4,
-    'sunrise': 5,
-    'sunset': 6,
-    'time': 7
+    'geolocation': 1,
+    'sunrise': 2,
+    'sunset': 3,
+    'offset': 4,          'offset:hh:mm': 4,
+    'offset:hhmm': 5,  
+    'abbreviation': 6,
+    'time': 7,      
+    'latitude': 8,       'latitude:iso': 8,
+    'longitude': 9,      'longitude:iso': 9,
+    'latitude:decimal': 10,
+    'longitude:decimal': 11
 }
 data_format=[ x for x in data_format_fromArgs if x in mapdict ]
+headers=[ x.split(':')[0] for x in data_format]
 data_format_idx=[ mapdict[x] for x in data_format ]
-def formatData(fields):
+
+def format_data(fields):
     return [ fields[x] for x in data_format_idx ]
 
-isTimeinData = 'time' in data_format
+is_time_in_data = 'time' in data_format
+is_formattedGeoLocation_in_data = any([x.startswith('latitude') or x.startswith('longitude') for x in data_format])
 
-print ';'.join(data_format)+"; "
+print(';'.join(headers)+"; ")
+
 
 for line in sys.stdin:
-    fields=line.split()
-    if isTimeinData : fields.append( timeinOffset(fields[1] ) )
-    print ';'.join(formatData(fields))
+    fields = line.split()
+    fields += time_in_timezone(fields[mapdict['name']] ) if is_time_in_data else ['']
+    if is_formattedGeoLocation_in_data:
+        coordinates = from_ISO_6709(fields[mapdict['geolocation']])
+        fields += [coordinates.format_latitude_iso(), coordinates.format_longitude_iso(),coordinates.format_latitude_decimal(), coordinates.format_longitude_decimal()]
+    else:
+        fields += [''] * 4
 
+    print(';'.join(format_data(fields)));

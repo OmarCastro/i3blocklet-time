@@ -1,37 +1,37 @@
 import sys
 from sun import Sun
+import time
+import os
+from geo_location import from_ISO_6709
 
 sun = Sun()
 
-def toTimeInOffset(suntime,utcOffset):
-    gmt_offset_multi = 1 if utcOffset[0] == "+" else -1
-    gmt_offset_hours = int(utcOffset[1:-2])
-    gmt_offset_minutes = int(utcOffset[-2:])
-    gmt_offset_in_minutes = gmt_offset_multi * (gmt_offset_hours * 60 + gmt_offset_minutes);
+def to_time_in_timezone(suntime,timezone_name):
+    os.environ["TZ"]=timezone_name
+    time.tzset()
+    timezone_offset=time.timezone;
     utc_hours = suntime['hr']
     utc_mins = suntime['min']
-    utc_in_mins = utc_hours * 60 + utc_mins
-    local_time = utc_in_mins + gmt_offset_in_minutes
-    local_time = local_time % (24 * 60) if local_time >= 0 else local_time + 24 * 60
-    local_hours = local_time / 60
-    local_min = local_time % 60
+    utc_time = (utc_hours * 60 + utc_mins) * 60
+    local_time = utc_time - timezone_offset;
+    local_hours = (int(local_time / 3600) + 24) % 24
+    local_min = int((local_time % 3600) / 60)
     return '{0:02d}:{1:02d}'.format(local_hours, local_min)
 
 
 
 for line in sys.stdin:
   fields=line.split()
-  utcOffset=fields[1]
-  lat=float(fields[3])
-  lon=float(fields[4])
-  coords = {'longitude' : lon, 'latitude' : lat }
+  timezone=fields[0]
+  coordinates = from_ISO_6709(fields[1])
+  coords = {'longitude' : float(coordinates.longitude.decimal), 'latitude' : float(coordinates.latitude.decimal) }
   sunrise = sun.getSunriseTime( coords )
   if sunrise['status']:
     sunset = sun.getSunsetTime( coords )
-    leftToken = toTimeInOffset(sunrise, utcOffset)
-    rightToken = toTimeInOffset(sunset, utcOffset)
+    leftToken = to_time_in_timezone(sunrise, timezone)
+    rightToken = to_time_in_timezone(sunset, timezone)
   else:
     leftToken = "allDay" if sunrise['alwaysDay'] else "allNight"
     rightToken = leftToken
-  print '{0} {1} {2}'.format(line.rstrip("\n\r"), leftToken, rightToken)
+  print('{0} {1} {2}'.format(line.rstrip("\n\r"), leftToken, rightToken))
 
