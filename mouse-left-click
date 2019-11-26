@@ -16,7 +16,7 @@ function getTimezonesWithSunTimes(){
       | grep -v "^#" \
       | awk '{print $3" "$2}' \
       | pyscript addSunTimes \
-      | pyscript appendTzAbbrOffsets --sort \
+      | pyscript appendTzAbbrOffsets -f 1 --sort \
       | tee $CACHE_FILE
   fi
 }
