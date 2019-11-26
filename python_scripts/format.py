@@ -1,7 +1,7 @@
 import sys
 import time
 import os
-from geo_location import from_ISO_6709
+from utils.geo_location import from_ISO_6709
 
 now = time.time()
 
