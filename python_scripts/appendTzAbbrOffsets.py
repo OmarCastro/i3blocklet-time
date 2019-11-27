@@ -13,7 +13,6 @@ args = parser.parse_args()
 if args.tz_field < 1:
     parser.error("timezone field must be a positive number")
 
-print('{0}'.format(args))
 now = time.time()
 
 def offsets_in_timezone(timezone_name):
