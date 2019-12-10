@@ -4,7 +4,7 @@ pyscript(){
   python3 "$PYTHON_SCRIPTS_PATH/$1.py" "${@:2}"
 }
 
-FORMAT_COLUMNS=${timezone_columns:-'name,time,offset,abbreviation,latitude,longitude,sunrise,sunset,latitude:decimal,longitude:decimal'}
+FORMAT_COLUMNS=name,${additional_columns:-'time,offset,abbreviation,latitude,longitude,sunrise,sunset'}
 
 function getTimezonesWithSunTimes(){
   CACHE_FILE="/tmp/i3blocklet-time/timezones-$(printf '%(%Y-%m-%d)T')"
@@ -21,28 +21,23 @@ function getTimezonesWithSunTimes(){
   fi
 }
 
-
-ROFI_CONTENT=$(getTimezonesWithSunTimes | pyscript format "$FORMAT_COLUMNS"  | column -s ';' -t )
-ROFI_HEADER=$(echo "$ROFI_CONTENT" |  head -1)
+TABLE=$(getTimezonesWithSunTimes | pyscript format "$FORMAT_COLUMNS"  | column -s ';' -t )
+TABLE_HEADER="${TABLE%%$'\n'*}"
+TABLE_LINES="${TABLE#*$'\n'}"
 TIMESTATUS="$(timedatectl status )"
-MESSAGE="$TIMESTATUS"$'\n'"$ROFI_HEADER"
-WIDTH="$(echo "( $(wc -L <<< "$MESSAGE") * 1.05 )/1" | bc)"
+MESSAGE="$TIMESTATUS"$'\n'"$TABLE_HEADER"
+WIDTH=$(bc <<< "( $(wc -L <<< "$MESSAGE") * 1.05 )/1" )
 
 
-ROFI_OPTIONAL_ARGS=()
+ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -width -$WIDTH -markup-rows -p "Select timezone")
 if ! [[ -z "$rofi_theme" ]]; then
-  ROFI_OPTIONAL_ARGS+=( -theme "$rofi_theme" )
+  ROFI_ARGS+=( -theme "$rofi_theme" )
 fi
 if ! [[ -z "$rofi_window_anchor" ]]; then
-  ROFI_OPTIONAL_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"';}' )
+  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"';}' )
 fi
 
-
-
-SELECTED_OPTION="$(echo "$ROFI_CONTENT" \
-	| tail +2 \
-  | rofi -dmenu -mesg "$MESSAGE" -eh 1 -width -$WIDTH -markup-rows -p "Select timezone" "${ROFI_OPTIONAL_ARGS[@]}" \
-)"   
+SELECTED_OPTION="$(rofi "${ROFI_ARGS[@]}" <<< "$TABLE_LINES" )"   
 
 if [ ! -z "$SELECTED_OPTION" ]
 then
