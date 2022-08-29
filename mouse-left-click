@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/env bash
 PYTHON_SCRIPTS_PATH="$( dirname "${BASH_SOURCE[0]}" )/python_scripts"
 pyscript(){
   python3 "$PYTHON_SCRIPTS_PATH/$1.py" "${@:2}"
