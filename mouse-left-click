@@ -29,18 +29,18 @@ MESSAGE="$TIMESTATUS"$'\n'"$TABLE_HEADER"
 WIDTH=$(bc <<< "( $(wc -L <<< "$MESSAGE") * 1.05 )/1" )
 
 
-ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -width -$WIDTH -markup-rows -p "Select timezone")
+ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -markup-rows -p "Select timezone")
 if ! [[ -z "$rofi_theme" ]]; then
   ROFI_ARGS+=( -theme "$rofi_theme" )
 fi
 if ! [[ -z "$rofi_window_anchor" ]]; then
-  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"';}' )
+  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"'; width: '"$WIDTH"'ch; }' )
 fi
 
 SELECTED_OPTION="$(rofi "${ROFI_ARGS[@]}" <<< "$TABLE_LINES" )"   
 
 if [ ! -z "$SELECTED_OPTION" ]
 then
-    SELECTED_TIMEZONE="$(cut -d" " -f1 <<< "$SELECTED_OPTION")"
- 	sudo timedatectl set-timezone "$SELECTED_TIMEZONE"
+  SELECTED_TIMEZONE="$(cut -d" " -f1 <<< "$SELECTED_OPTION")"
+ 	timedatectl set-timezone "$SELECTED_TIMEZONE"
 fi
