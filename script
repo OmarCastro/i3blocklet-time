@@ -5,6 +5,7 @@ FORMAT="${format:-%H:%M:%S}"
 handle_buttons(){
 	case "$1" in
 	    1) ( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null 2>&1 && setsid ./mouse-left-click ) > /dev/null ;;
+	    3) ( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null 2>&1 && setsid ./mouse-right-click ) > /dev/null ;;
 	esac
 }
 

@@ -1,0 +1,36 @@
+#!/bin/env bash
+PYTHON_SCRIPTS_PATH="$( dirname "${BASH_SOURCE[0]}" )/python_scripts"
+pyscript(){
+  python3 "$PYTHON_SCRIPTS_PATH/$1.py" "${@:2}"
+}
+
+
+
+TIMESTATUS="$(timedatectl status )"
+MESSAGE="$TIMESTATUS"
+WIDTH=$(bc <<< "( $(wc -L <<< "$MESSAGE") * 1.05 )/1" )
+NTP_STATUS="$(grep -Po 'NTP service:\s* \K.*' <<< "$TIMESTATUS" )"
+OPTIONS=""
+
+case "$NTP_STATUS" in
+ inactive) OPTIONS="set ntp on";;
+ active) OPTIONS="set ntp off";;
+esac
+
+ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -markup-rows -p "Option")
+if ! [[ -z "$rofi_theme" ]]; then
+  ROFI_ARGS+=( -theme "$rofi_theme" )
+fi
+if ! [[ -z "$rofi_window_anchor" ]]; then
+  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"'; width: '"$WIDTH"'ch; }' )
+fi
+
+SELECTED_OPTION="$(rofi "${ROFI_ARGS[@]}" <<< "$OPTIONS" )"   
+
+if [ ! -z "$SELECTED_OPTION" ]
+then
+  case "$SELECTED_OPTION" in
+  "set ntp on") timedatectl set-ntp true;;
+  "set ntp off") timedatectl set-ntp false;;
+  esac
+fi
