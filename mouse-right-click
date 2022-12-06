@@ -17,12 +17,12 @@ case "$NTP_STATUS" in
  active) OPTIONS="set ntp off";;
 esac
 
-ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -markup-rows -p "Option")
+ROFI_ARGS=(-dmenu -mesg "$MESSAGE" -eh 1 -markup-rows -fixed-num-lines -p "Option")
 if ! [[ -z "$rofi_theme" ]]; then
   ROFI_ARGS+=( -theme "$rofi_theme" )
 fi
 if ! [[ -z "$rofi_window_anchor" ]]; then
-  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"'; width: '"$WIDTH"'ch; }' )
+  ROFI_ARGS+=( -m -3 -theme-str '#window {anchor:'"$rofi_window_anchor"'; width: '"$WIDTH"'ch;} #listview {lines: 1; scrollbar:false;}' )
 fi
 
 SELECTED_OPTION="$(rofi "${ROFI_ARGS[@]}" <<< "$OPTIONS" )"   
